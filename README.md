@@ -54,6 +54,10 @@ An interactive web map of the seven independent cities of the Hampton Roads Metr
 
 ---
 
+**Jessica Clérc Evans**
+Civil & Environmental Engineer | Environmental Justice Researcher | Community Advocate
+🔬 [ORCID: 0009-0003-3626-1069](https://orcid.org/0009-0003-3626-1069) 🌐 [jessicacevans.com](https://www.jessicacevans.com)
+
 ## Deployment
 
 This map is hosted via **GitHub Pages** and embedded in Squarespace via an iframe.
