@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hampton Roads Seven Cities Map</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f0e8;
+      --header-bg: #5c3d1e;
+      --header-text: #f5f0e8;
+      --panel-bg: #ede8dd;
+      --border: #b09070;
+      --text: #3d2b1f;
+      --accent: #8B6B47;
+      --footer-bg: #4a3218;
+      --footer-text: #e8dcc8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+    header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 18px 24px;
+      text-align: center;
+    }
+    header h1 { font-family: Georgia, serif; font-size: 1.7rem; letter-spacing: 0.04em; }
+    header p { font-size: 0.9rem; margin-top: 4px; opacity: 0.85; }
+    .map-container { position: relative; }
+    #map { height: 500px; width: 100%; }
+    #resetBtn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      background: var(--header-bg);
+      color: var(--header-text);
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: 'Segoe UI', sans-serif;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      transition: background 0.2s;
+    }
+    #resetBtn:hover { background: var(--accent); }
+    .below-map {
+      display: flex;
+      flex-direction: row;
+      background: var(--panel-bg);
+      border-top: 2px solid var(--border);
+    }
+    .legend {
+      min-width: 220px;
+      padding: 18px;
+      border-right: 1px solid var(--border);
+    }
+    .legend h3 {
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 4px 6px;
+      transition: background 0.15s;
+    }
+    .legend-item:hover { background: rgba(139,107,71,0.12); }
+    .legend-swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      border-width: 1.5px;
+      border-style: solid;
+    }
+    .legend-label { font-size: 0.88rem; }
+    .info-panel {
+      flex: 1;
+      padding: 18px 22px;
+    }
+    .info-panel h3 {
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+    #cityInfo { font-size: 0.88rem; line-height: 1.7; }
+    #cityInfo .placeholder { color: #9a8070; font-style: italic; }
+    .info-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    .info-table td { padding: 4px 8px; vertical-align: top; }
+    .info-table td:first-child { font-weight: 600; color: var(--accent); white-space: nowrap; }
+    .methods {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 18px 24px;
+      font-size: 0.82rem;
+      line-height: 1.7;
+    }
+    .methods h4 {
+      font-family: Georgia, serif;
+      font-size: 0.95rem;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .methods ul { margin-left: 18px; }
+    .methods ul li { margin-bottom: 4px; }
+    footer {
+      background: var(--footer-bg);
+      color: var(--footer-text);
+      text-align: center;
+      padding: 12px 24px;
+      font-size: 0.8rem;
+    }
+    @media (max-width: 768px) {
+      .below-map { flex-direction: column; }
+      .legend { min-width: unset; border-right: none; border-bottom: 1px solid var(--border); }
+      header h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body data-id="0">
+
+<header data-id="1">
+  <h1 data-id="2">Hampton Roads Seven Cities</h1>
+  <p data-id="3">Independent Cities of the Hampton Roads Metropolitan Area, Virginia</p>
+</header>
+
+<div data-id="4" class="map-container">
+  <div data-id="5" id="map" style="height:500px;width:100%;"></div>
+  <button data-id="6" id="resetBtn">&#8962; Reset View</button>
+</div>
+
+<div data-id="7" class="below-map">
+  <div data-id="8" class="legend">
+    <h3 data-id="9">Cities</h3>
+    <div data-id="10" id="legendItems"></div>
+  </div>
+  <div data-id="11" class="info-panel">
+    <h3 data-id="12">City Information</h3>
+    <div data-id="13" id="cityInfo">
+      <span data-id="14" class="placeholder">Click a city on the map or in the legend to view details.</span>
+    </div>
+  </div>
+</div>
+
+<div data-id="15" class="methods">
+  <h4 data-id="16">Methods &amp; Data Sources</h4>
+  <ul data-id="17">
+    <li data-id="18"><strong data-id="19">Boundaries:</strong> U.S. Census Bureau TIGER/Line geographic identifiers, decoded from us-atlas TopoJSON (Census TIGER/Line derived). Embedded as GeoJSON; no runtime API calls.</li>
+    <li data-id="20"><strong data-id="21">Population:</strong> 2020 Census P.L. 94-171 Redistricting Data Summary File.</li>
+    <li data-id="22"><strong data-id="23">Land Area:</strong> Census TIGER/Line geographic identifiers (square miles).</li>
+    <li data-id="24"><strong data-id="25">Basemap:</strong> &copy; <a data-id="26" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, ODbL.</li>
+    <li data-id="27"><strong data-id="28">Pipeline:</strong> ACS 5-Year estimates joined to TIGER boundaries on GEOID (text field, leading zeros preserved). Python / GeoPandas workflow.</li>
+  </ul>
+</div>
+
+<footer data-id="29">
+  <p data-id="30">Hampton Roads Seven Cities Map &nbsp;|&nbsp; Portsmouth, VA &nbsp;|&nbsp; Contributors: Google Earth | ESRI | NAVFAC</p>
+</footer>
+
+<script>
+  // ── Embedded GeoJSON (Census TIGER/Line, us-atlas decoded) ─────────────────
+  var SEVEN_CITIES = {"type":"FeatureCollection","features":[{"type":"Feature","id":"51650","properties":{"name":"Hampton","fips":"51650"},"geometry":{"type":"Polygon","coordinates":[[[-76.4361,37.09498],[-76.39662,37.10701],[-76.3033,37.10357],[-76.28894,37.11731],[-76.271,37.08467],[-76.3033,37.00134],[-76.31766,37.01423],[-76.38944,36.98931],[-76.45046,37.03742],[-76.4361,37.09498]]]}},{"type":"Feature","id":"51710","properties":{"name":"Norfolk","fips":"51710"},"geometry":{"type":"Polygon","coordinates":[[[-76.33201,36.8888],[-76.31766,36.88537],[-76.32842,36.95925],[-76.26741,36.9644],[-76.18485,36.9309],[-76.19562,36.82781],[-76.22433,36.83984],[-76.28894,36.8218],[-76.33201,36.8888]]]}},{"type":"Feature","id":"51740","properties":{"name":"Portsmouth","fips":"51740"},"geometry":{"type":"Polygon","coordinates":[[[-76.40739,36.89739],[-76.38585,36.92317],[-76.35355,36.92317],[-76.33201,36.8888],[-76.28894,36.8218],[-76.29253,36.7986],[-76.37509,36.78572],[-76.4038,36.81407],[-76.38226,36.83726],[-76.42175,36.86647],[-76.40739,36.89739]]]}},{"type":"Feature","id":"51800","properties":{"name":"Suffolk","fips":"51800"},"geometry":{"type":"Polygon","coordinates":[[[-76.89912,36.64397],[-76.74837,36.75221],[-76.52942,36.91629],[-76.48276,36.92918],[-76.48276,36.89654],[-76.40739,36.89739],[-76.42175,36.86647],[-76.45764,36.81664],[-76.48994,36.55033],[-76.54019,36.55033],[-76.91707,36.55205],[-76.89912,36.64397]]]}},{"type":"Feature","id":"51550","properties":{"name":"Chesapeake","fips":"51550"},"geometry":{"type":"Polygon","coordinates":[[[-76.42175,36.86647],[-76.38226,36.83726],[-76.4038,36.81407],[-76.37509,36.78572],[-76.29253,36.7986],[-76.28894,36.8218],[-76.22433,36.83984],[-76.2028,36.7694],[-76.14178,36.75737],[-76.08076,36.7127],[-76.06999,36.67748],[-76.12025,36.66545],[-76.12384,36.55033],[-76.31407,36.55033],[-76.48994,36.55033],[-76.45764,36.81664],[-76.42175,36.86647]]]}},{"type":"Feature","id":"51700","properties":{"name":"Newport News","fips":"51700"},"geometry":{"type":"Polygon","coordinates":[[[-76.61198,37.16714],[-76.57967,37.1826],[-76.59044,37.21353],[-76.56532,37.2204],[-76.51507,37.17831],[-76.46123,37.10271],[-76.4361,37.09498],[-76.45046,37.03742],[-76.38944,36.98931],[-76.42892,36.96956],[-76.46482,37.02797],[-76.56891,37.08037],[-76.61916,37.11903],[-76.61198,37.16714]]]}},{"type":"Feature","id":"51810","properties":{"name":"Virginia Beach","fips":"51810"},"geometry":{"type":"Polygon","coordinates":[[[-76.22433,36.83984],[-76.19562,36.82781],[-76.18485,36.9309],[-76.09512,36.90856],[-76.0341,36.93176],[-75.99462,36.92231],[-75.96591,36.81235],[-75.92283,36.69208],[-75.89053,36.63109],[-75.86541,36.55033],[-76.12384,36.55033],[-76.12025,36.66545],[-76.06999,36.67748],[-76.08076,36.7127],[-76.14178,36.75737],[-76.2028,36.7694],[-76.22433,36.83984]]]}}]};
+
+  // ── City stats (2020 Census) ────────────────────────────────────────────────
+  var CITY_DATA = {
+    "51740": {name:"Portsmouth",    pop:95535,  area:33.0},
+    "51710": {name:"Norfolk",       pop:238005, area:53.8},
+    "51810": {name:"Virginia Beach",pop:459470, area:248.3},
+    "51550": {name:"Chesapeake",    pop:249422, area:340.8},
+    "51650": {name:"Hampton",       pop:137148, area:51.5},
+    "51700": {name:"Newport News",  pop:186247, area:69.4},
+    "51800": {name:"Suffolk",       pop:97284,  area:400.0}
+  };
+
+  // ── Colors ──────────────────────────────────────────────────────────────────
+  var CITY_STYLE = {
+    "51740": {fill:"#8B3A3A", border:"#5c2020", weight:3,   opacity:0.85},
+    "51710": {fill:"#C49A6C", border:"#7a5c30", weight:1.5, opacity:0.65},
+    "51810": {fill:"#D4A96A", border:"#7a5c30", weight:1.5, opacity:0.65},
+    "51550": {fill:"#B8956A", border:"#7a5c30", weight:1.5, opacity:0.65},
+    "51650": {fill:"#C8A870", border:"#7a5c30", weight:1.5, opacity:0.65},
+    "51700": {fill:"#D2B080", border:"#7a5c30", weight:1.5, opacity:0.65},
+    "51800": {fill:"#BF9060", border:"#7a5c30", weight:1.5, opacity:0.65}
+  };
+
+  // ── Portsmouth reset target ─────────────────────────────────────────────────
+  var PORTSMOUTH_CENTER = [36.835, -76.370];
+  var PORTSMOUTH_ZOOM   = 12;
+
+  // ── Hampton Roads max bounds ────────────────────────────────────────────────
+  var HR_BOUNDS = L.latLngBounds(L.latLng(36.5, -77.1), L.latLng(37.3, -75.8));
+
+  // ── Init map ────────────────────────────────────────────────────────────────
+  var map = L.map('map', {
+    center: PORTSMOUTH_CENTER,
+    zoom: PORTSMOUTH_ZOOM,
+    maxBounds: HR_BOUNDS,
+    maxBoundsViscosity: 1.0,
+    minZoom: 10,
+    maxZoom: 16
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(map);
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function styleFor(fips, hover) {
+    var s = CITY_STYLE[fips];
+    return {
+      color: s.border,
+      weight: hover ? s.weight + 1 : s.weight,
+      fillColor: s.fill,
+      fillOpacity: hover ? Math.min(s.opacity + 0.15, 1.0) : s.opacity
+    };
+  }
+
+  function showCityInfo(fips) {
+    var d = CITY_DATA[fips];
+    if (!d) return;
+    var density = (d.pop / d.area).toFixed(1);
+    var star = fips === "51740" ? "&#9733; " : "";
+    document.getElementById('cityInfo').innerHTML =
+      '<strong style="font-size:1.05rem;font-family:Georgia,serif;color:#5c3d1e;">' + star + d.name + '</strong>' +
+      '<table class="info-table">' +
+        '<tr><td>FIPS Code</td><td>' + fips + '</td></tr>' +
+        '<tr><td>Population</td><td>' + d.pop.toLocaleString() + ' <small>(2020 Census)</small></td></tr>' +
+        '<tr><td>Land Area</td><td>' + d.area.toFixed(1) + ' sq mi</td></tr>' +
+        '<tr><td>Pop. Density</td><td>' + density + ' per sq mi</td></tr>' +
+        '<tr><td>Metro Area</td><td>Hampton Roads, VA</td></tr>' +
+        '<tr><td>Jurisdiction</td><td>Virginia independent city</td></tr>' +
+      '</table>';
+  }
+
+  // ── Layer registry ──────────────────────────────────────────────────────────
+  var layerByFips = {};
+
+  // ── GeoJSON layer ───────────────────────────────────────────────────────────
+  var geoLayer = L.geoJSON(SEVEN_CITIES, {
+    style: function(feature) {
+      return styleFor(feature.properties.fips, false);
+    },
+    onEachFeature: function(feature, layer) {
+      var fips = feature.properties.fips;
+      var d = CITY_DATA[fips] || {};
+      var name = d.name || feature.properties.name;
+      layerByFips[fips] = layer;
+
+      layer.on('mouseover', function() { layer.setStyle(styleFor(fips, true)); });
+      layer.on('mouseout',  function() { layer.setStyle(styleFor(fips, false)); });
+      layer.on('click', function() {
+        layer.bindPopup(
+          '<strong>' + name + '</strong><br>' +
+          'Pop: ' + (d.pop ? d.pop.toLocaleString() : 'N/A') + '<br>' +
+          'Area: ' + (d.area ? d.area.toFixed(1) : 'N/A') + ' sq mi'
+        ).openPopup();
+        showCityInfo(fips);
+      });
+    }
+  }).addTo(map);
+
+  setTimeout(function(){ map.invalidateSize(); }, 150);
+  setTimeout(function(){ map.invalidateSize(); }, 300);
+
+  // ── Legend ──────────────────────────────────────────────────────────────────
+  var LEGEND_ORDER = ["51740","51710","51810","51550","51650","51700","51800"];
+  var container = document.getElementById('legendItems');
+
+  LEGEND_ORDER.forEach(function(fips) {
+    var d = CITY_DATA[fips];
+    var s = CITY_STYLE[fips];
+    var star = fips === "51740" ? "&#9733; " : "";
+    var item = document.createElement('div');
+    item.className = 'legend-item';
+    item.title = 'Click to zoom to ' + d.name;
+    item.innerHTML =
+      '<div class="legend-swatch" style="background:' + s.fill + ';border-color:' + s.border + ';"></div>' +
+      '<span class="legend-label">' + star + d.name + '</span>';
+    item.addEventListener('click', function() {
+      var layer = layerByFips[fips];
+      if (!layer) return;
+      map.fitBounds(layer.getBounds(), {padding:[30,30]});
+      layer.bindPopup(
+        '<strong>' + d.name + '</strong><br>' +
+        'Pop: ' + d.pop.toLocaleString() + '<br>' +
+        'Area: ' + d.area.toFixed(1) + ' sq mi'
+      ).openPopup();
+      showCityInfo(fips);
+    });
+    container.appendChild(item);
+  });
+
+  // ── Reset View button ───────────────────────────────────────────────────────
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    map.flyTo(PORTSMOUTH_CENTER, PORTSMOUTH_ZOOM, {duration: 1.2});
+  });
+</script>
+</body>
+</html>
